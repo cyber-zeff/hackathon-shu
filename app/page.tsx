@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import ChatBot from "@/app/components/ChatBot";
 
 const fields = [
   "Technology", "Medicine", "Business", "Engineering",
@@ -8,96 +10,173 @@ const fields = [
 ];
 
 export default function HomePage() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [searchType, setSearchType] = useState<"uni" | "field" | null>(null);
+  const [query, setQuery] = useState("");
+  const [searchResult, setSearchResult] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!query.trim() || isSearching) return;
+
+    setIsSearching(true);
+    setSearchResult("");
+
+    try {
+      const prompt = searchType === "uni" 
+        ? `Recommend top universities in Pakistan for the field: ${query}. Provide a concise list with a one-sentence reason for each.`
+        : `Explain the career field "${query}" in the context of Pakistan. What are the top roles, salary ranges in PKR, and future outlook?`;
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: prompt }],
+          context: "User is using the quick search feature on the home page. Focus exclusively on Pakistan.",
+        }),
+      });
+
+      const data = await res.json();
+      setSearchResult(data.content);
+    } catch (err) {
+      setSearchResult("Failed to get information. Please try again.");
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col bg-[var(--paper)]">
       {/* Nav */}
-      <nav className="px-8 py-6 flex items-center justify-between border-b border-[var(--border)]">
+      <nav className="px-8 py-6 flex items-center justify-between border-b border-[var(--border)] bg-white/50 backdrop-blur sticky top-0 z-20">
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Tota-ly Guiding Logo" className="w-8 h-8 rounded-full object-cover" />
           <span className="font-display text-lg tracking-tight">Tota-ly Guiding</span>
         </div>
-        <Link
-          href="/assessment"
-          className="text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
-        >
-          Start Assessment →
-        </Link>
+        <div className="hidden md:flex gap-6">
+           <button onClick={() => {setSearchType("uni"); setSearchResult(""); setQuery("")}} className="text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)]">Universities</button>
+           <button onClick={() => {setSearchType("field"); setSearchResult(""); setQuery("")}} className="text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)]">Career Fields</button>
+        </div>
       </nav>
 
       {/* Hero */}
-      <section className="flex-1 flex flex-col items-center justify-center px-6 py-24 text-center relative overflow-hidden">
-        {/* Decorative rings */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[600px] h-[600px] rounded-full border border-[var(--border)] opacity-40" />
-          <div className="absolute w-[400px] h-[400px] rounded-full border border-[var(--border)] opacity-60" />
-          <div className="absolute w-[200px] h-[200px] rounded-full border border-[var(--accent)] opacity-30" />
-        </div>
-
+      <section className="px-6 py-16 text-center relative overflow-hidden">
         <div className="relative z-10 max-w-4xl mx-auto">
           <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--accent)] text-xs font-medium tracking-widest uppercase mb-8 opacity-0 animate-fade-up"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--accent)] text-xs font-medium tracking-widest uppercase mb-8 animate-fade-up"
             style={{ color: "var(--accent-deep)" }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-            AI-Powered Career Intelligence
+            Pakistan's Premier Career Guide
           </div>
 
-          <h1 className="font-display text-6xl md:text-8xl leading-[0.95] tracking-tight mb-6 opacity-0 animate-fade-up delay-100">
-            Find Your{" "}
-            <em className="shimmer-text not-italic">Perfect</em>
-            <br />
-            Career Path
+          <h1 className="font-display text-5xl md:text-7xl leading-tight mb-6 animate-fade-up">
+            Your Future in <em className="shimmer-text not-italic">Pakistan</em><br />Starts Here
           </h1>
-
-          <p className="text-[var(--muted)] text-xl max-w-xl mx-auto leading-relaxed mb-12 opacity-0 animate-fade-up delay-200">
-            Answer 10 questions. Get 3 personalized career recommendations — complete with
-            top universities to help you get there.
+          
+          <p className="text-[var(--muted)] text-lg max-w-xl mx-auto mb-12 animate-fade-up delay-100">
+            Empowering Pakistani students to make informed decisions about their careers and education.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-center opacity-0 animate-fade-up delay-300">
-            <Link
-              href="/assessment"
-              className="group px-8 py-4 bg-[var(--ink)] text-white rounded-full font-medium text-base hover:bg-[var(--accent-deep)] transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-md"
-            >
-              Begin Your Assessment
-              <span className="ml-2 inline-block group-hover:translate-x-1 transition-transform">→</span>
+          {/* 4 Options Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-8 px-4">
+            {/* 1. Assessment */}
+            <Link href="/assessment" className="group p-8 bg-white rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-xl hover:border-[var(--accent)] transition-all text-left flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[var(--paper)] flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">📝</div>
+                <h3 className="font-display text-2xl mb-3 text-[var(--ink)]">Take Assessment</h3>
+                <p className="text-[var(--muted)] text-sm leading-relaxed">Discover your ideal path through 10 personality-based questions.</p>
+              </div>
+              <div className="mt-8 text-sm font-bold text-[var(--accent-deep)] flex items-center gap-2">
+                Get Started <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
             </Link>
-            <span className="text-[var(--muted)] text-sm">Takes about 3 minutes</span>
+
+            {/* 2. Search Universities */}
+            <button onClick={() => {setSearchType("uni"); setSearchResult(""); setQuery("")}} className="group p-8 bg-white rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-xl hover:border-[var(--accent)] transition-all text-left flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[var(--paper)] flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">🏛</div>
+                <h3 className="font-display text-2xl mb-3 text-[var(--ink)]">Search Universities</h3>
+                <p className="text-[var(--muted)] text-sm leading-relaxed">Find top-ranked Pakistani universities for any specific field.</p>
+              </div>
+              <div className="mt-8 text-sm font-bold text-[var(--accent-deep)] flex items-center gap-2">
+                Find Uni <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </button>
+
+            {/* 3. Search Fields */}
+            <button onClick={() => {setSearchType("field"); setSearchResult(""); setQuery("")}} className="group p-8 bg-white rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-xl hover:border-[var(--accent)] transition-all text-left flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[var(--paper)] flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">🚀</div>
+                <h3 className="font-display text-2xl mb-3 text-[var(--ink)]">Explore Fields</h3>
+                <p className="text-[var(--muted)] text-sm leading-relaxed">Learn about emerging roles and market demand in Pakistan.</p>
+              </div>
+              <div className="mt-8 text-sm font-bold text-[var(--accent-deep)] flex items-center gap-2">
+                Explore Now <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </button>
+
+            {/* 4. Chat Direct */}
+            <button onClick={() => setIsChatOpen(true)} className="group p-8 bg-[var(--ink)] rounded-2xl shadow-lg hover:shadow-2xl transition-all text-left flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">🦜</div>
+                <h3 className="font-display text-2xl mb-3 text-white">Talk to padhleTota</h3>
+                <p className="text-white/70 text-sm leading-relaxed">Have a direct conversation with our AI career mentor.</p>
+              </div>
+              <div className="mt-8 text-sm font-bold text-[var(--accent)] flex items-center gap-2">
+                Start Chatting <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Features strip */}
-      <section className="border-t border-[var(--border)] px-8 py-12">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            {
-              icon: "✦",
-              title: "10 Smart Questions",
-              desc: "Carefully designed to understand your personality, interests, and goals.",
-            },
-            {
-              icon: "◈",
-              title: "3 AI-Matched Careers",
-              desc: "GPT-4 analyzes your answers and generates personalized career recommendations.",
-            },
-            {
-              icon: "⬡",
-              title: "Top University Matches",
-              desc: "Each career is paired with the top 5 universities ranked in that field.",
-            },
-          ].map((f, i) => (
-            <div key={i} className="flex flex-col gap-3">
-              <span className="text-2xl text-[var(--accent)]">{f.icon}</span>
-              <h3 className="font-display text-xl">{f.title}</h3>
-              <p className="text-[var(--muted)] text-sm leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
+      {/* Search Overlay/Modal */}
+      {searchType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[var(--ink)]/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl animate-fade-up">
+             <div className="px-8 py-6 border-b border-[var(--border)] flex items-center justify-between bg-[var(--paper)]">
+                <h3 className="font-display text-2xl">
+                  {searchType === "uni" ? "Find Pakistani Universities" : "Explore Career Fields"}
+                </h3>
+                <button onClick={() => setSearchType(null)} className="text-[var(--muted)] hover:text-[var(--ink)]">✕</button>
+             </div>
+             <div className="p-8">
+                <form onSubmit={handleSearch} className="flex gap-2 mb-8">
+                  <input 
+                    autoFocus
+                    type="text" 
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={searchType === "uni" ? "e.g. Software Engineering, Medicine..." : "e.g. Data Science, Digital Marketing..."}
+                    className="flex-1 px-6 py-4 rounded-xl border border-[var(--border)] focus:border-[var(--accent)] outline-none"
+                  />
+                  <button 
+                    disabled={isSearching || !query.trim()}
+                    type="submit" 
+                    className="px-8 bg-[var(--ink)] text-white rounded-xl font-bold disabled:opacity-50"
+                  >
+                    {isSearching ? "Searching..." : "Search"}
+                  </button>
+                </form>
+
+                {searchResult && (
+                  <div className="bg-[var(--paper)] p-6 rounded-2xl border border-[var(--border)] max-h-[300px] overflow-y-auto animate-fade-in">
+                    <div className="prose prose-sm text-[var(--ink)]">
+                      {searchResult.split("\n").map((line, i) => (
+                        <p key={i} className="mb-2">{line}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+             </div>
+          </div>
         </div>
-      </section>
+      )}
 
       {/* Fields ticker */}
-      <section className="border-t border-[var(--border)] py-4 overflow-hidden bg-[var(--ink)]">
+      <section className="mt-auto border-t border-[var(--border)] py-4 overflow-hidden bg-[var(--ink)]">
         <div className="flex gap-8 animate-[marquee_20s_linear_infinite] whitespace-nowrap">
           {[...fields, ...fields].map((f, i) => (
             <span key={i} className="text-[var(--accent)] text-sm font-medium tracking-widest uppercase">
@@ -106,6 +185,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Direct Chat Component */}
+      <ChatBot careers={[]} answers={[]} forceOpen={isChatOpen} setForceOpen={setIsChatOpen} isHomeMode={true} />
 
       <style jsx>{`
         @keyframes marquee {

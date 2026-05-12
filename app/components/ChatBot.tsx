@@ -9,31 +9,62 @@ interface Message {
 }
 
 interface ChatBotProps {
-  careers: Career[];
-  answers: Answer[];
+  careers?: Career[];
+  answers?: Answer[];
+  forceOpen?: boolean;
+  setForceOpen?: (open: boolean) => void;
+  isHomeMode?: boolean;
 }
 
-export default function ChatBot({ careers, answers }: ChatBotProps) {
+export default function ChatBot({ 
+  careers = [], 
+  answers = [], 
+  forceOpen = false, 
+  setForceOpen,
+  isHomeMode = false
+}: ChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Sync internal open state with forceOpen prop
+  useEffect(() => {
+    if (forceOpen) setIsOpen(true);
+  }, [forceOpen]);
+
+  // Handle closing
+  function handleClose() {
+    setIsOpen(false);
+    if (setForceOpen) setForceOpen(false);
+  }
+
   // Initialize chat with a welcome message
   useEffect(() => {
-    if (messages.length === 0 && careers.length > 0) {
-      const careerList = careers.map((c) => c.title).join(", ");
-      setMessages([
-        {
-          role: "assistant",
-          content: `Hi there! I'm padhleTota. I see your top career matches are **${careerList}**. 
+    if (messages.length === 0) {
+      if (isHomeMode) {
+        setMessages([
+          {
+            role: "assistant",
+            content: `Salam! I'm padhleTota, your Pakistani career mentor. 🇵🇰
+
+I'm here to help you navigate your future. To get started, tell me: what are your favorite subjects in school, or is there a specific career you've been dreaming about?`,
+          },
+        ]);
+      } else if (careers.length > 0) {
+        const careerList = careers.map((c) => c.title).join(", ");
+        setMessages([
+          {
+            role: "assistant",
+            content: `Hi there! I'm padhleTota. I see your top career matches are **${careerList}**. 
 
 How can I help you explore these fields further? Feel free to ask about day-to-day life, salary expectations, or which one might fit your interests best!`,
-        },
-      ]);
+          },
+        ]);
+      }
     }
-  }, [careers, messages.length]);
+  }, [careers, messages.length, isHomeMode]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -52,7 +83,9 @@ How can I help you explore these fields further? Feel free to ask about day-to-d
     setIsLoading(true);
 
     try {
-      const context = `
+      const context = isHomeMode 
+        ? "User is talking to you directly from the home page. No assessment results yet. Ask them questions about their interests in Pakistan."
+        : `
 User Assessment Answers:
 ${answers.map((a) => `Q: ${a.question}\nA: ${a.selected}`).join("\n")}
 
@@ -103,7 +136,7 @@ ${careers
               <span className="font-display text-lg tracking-tight">padhleTota</span>
             </div>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               className="text-white/70 hover:text-white transition-colors"
             >
               ✕
@@ -154,7 +187,7 @@ ${careers
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about your recommendations..."
+              placeholder="Ask padhleTota anything..."
               className="flex-1 px-4 py-2 rounded-full border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
             />
             <button
@@ -169,23 +202,19 @@ ${careers
       )}
 
       {/* Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ${
-          isOpen ? "bg-white text-[var(--ink)] border border-[var(--border)]" : "bg-[var(--ink)] text-white"
-        }`}
-      >
-        {isOpen ? (
-          <span className="text-xl">✕</span>
-        ) : (
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 bg-[var(--ink)] text-white"
+        >
           <div className="flex flex-col items-center">
              <div className="w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center mb-0.5">
                 <span className="text-[var(--ink)] text-[8px] font-bold">AI</span>
              </div>
              <span className="text-[8px] font-bold uppercase tracking-tighter">Chat</span>
           </div>
-        )}
-      </button>
+        </button>
+      )}
     </div>
   );
 }
