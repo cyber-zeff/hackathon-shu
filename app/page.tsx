@@ -68,7 +68,7 @@ export default function HomePage() {
             style={{ color: "var(--accent-deep)" }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-            Pakistan's Premier Career Guide
+            Bas woh degree mat lena jo dost le raha hai.
           </div>
 
           <h1 className="font-display text-5xl md:text-7xl leading-tight mb-6 animate-fade-up">
