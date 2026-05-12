@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "python": "cd python-service && uvicorn main:app --reload --port 8000"
+    "python": "cd python-service && uvicorn main:app --reload --port 8000 --host 0.0.0.0"
   },
   "dependencies": {
     "next": "14.2.3",
