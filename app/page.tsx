@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import ChatBot from "@/app/components/ChatBot";
 
 const fields = [
@@ -10,11 +11,18 @@ const fields = [
 ];
 
 export default function HomePage() {
+  const searchParams = useSearchParams();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [searchType, setSearchType] = useState<"uni" | "field" | null>(null);
   const [query, setQuery] = useState("");
   const [searchResult, setSearchResult] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("chat") === "true") {
+      setIsChatOpen(true);
+    }
+  }, [searchParams]);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();

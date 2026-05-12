@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.ico",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Tota-ly Guiding",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
